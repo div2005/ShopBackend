@@ -2,7 +2,7 @@ package me.dev
 
 import io.ktor.server.application.*
 import org.koin.core.module.Module
-import ru.somniumcraft.plugins.configureKoin
+import me.dev.plugins.configureKoin
 import me.dev.configuration.setupConfig
 import me.dev.dependencyInjection.appModule
 import me.dev.plugins.*
