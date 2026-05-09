@@ -1,9 +1,10 @@
 package me.dev.feature.order.data
 
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.javatime.datetime
 import java.util.UUID
 
 object OrderTable : UUIDTable(name = "orders") {

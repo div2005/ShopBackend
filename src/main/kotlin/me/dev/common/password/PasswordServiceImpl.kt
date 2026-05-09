@@ -2,7 +2,7 @@ package me.dev.common.password
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import me.dev.feature.user.data.User
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import java.util.UUID
 
 class PasswordServiceImpl: PasswordService {
@@ -20,8 +20,8 @@ class PasswordServiceImpl: PasswordService {
     }
 
     override suspend fun verifyUserPassword(uuid: String, password: String): Boolean {
-        val hash = newSuspendedTransaction {
-            return@newSuspendedTransaction User.findById(UUID.fromString(uuid))?.password
+        val hash = suspendTransaction {
+            return@suspendTransaction User.findById(UUID.fromString(uuid))?.password
         } ?: return false
 
         return verifyPassword(password, hash)

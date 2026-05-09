@@ -12,14 +12,13 @@ val koin_version: String by project
 val kotlinx_datetime_version: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.0"
-    id("io.ktor.plugin") version "2.3.11"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm") version "2.3.21"
+    id("io.ktor.plugin") version "3.4.3"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21"
 }
 
 group = "me.dev"
-version = "0.0.1"
+version = "0.0.2"
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 
@@ -28,6 +27,7 @@ application {
 }
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
 }
 
@@ -44,6 +44,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposed_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_datetime_version")
 
@@ -54,8 +55,6 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
     implementation("com.zaxxer:HikariCP:$hikari_version")
 
@@ -64,13 +63,12 @@ dependencies {
 
     implementation("io.insert-koin:koin-ktor:$koin_version")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
-    testImplementation("io.ktor:ktor-server-test-host-jvm:2.3.1")
 
     implementation("at.favre.lib:bcrypt:0.10.2")
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 

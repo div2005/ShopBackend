@@ -1,4 +1,4 @@
-package ru.somniumcraft.plugins
+package me.dev.plugins
 
 import io.ktor.server.application.*
 import org.koin.core.module.Module

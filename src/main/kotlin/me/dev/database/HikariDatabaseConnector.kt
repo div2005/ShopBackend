@@ -2,19 +2,19 @@ package me.dev.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import me.dev.configuration.element.DatabaseConfig
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
 
-import me.dev.configuration.element.KtorConfig
+import org.jetbrains.exposed.v1.jdbc.Database
 
-class HikariDatabaseConnector(private val config: KtorConfig) : DatabaseConnector {
-    override fun connect() {
+class HikariDatabaseConnector : DatabaseConnector {
+    override fun connect(config: DatabaseConfig) {
         val hikariConfig = HikariConfig()
-        hikariConfig.driverClassName = config.databaseConfig.driverClass
-        hikariConfig.jdbcUrl = config.databaseConfig.url
-        hikariConfig.username = config.databaseConfig.user
-        hikariConfig.password = config.databaseConfig.password
-        hikariConfig.maximumPoolSize = config.databaseConfig.maxPoolSize
+        hikariConfig.driverClassName = config.driverClass
+        hikariConfig.jdbcUrl = config.url
+        hikariConfig.username = config.user
+        hikariConfig.password = config.password
+        hikariConfig.maximumPoolSize = config.maxPoolSize
         hikariConfig.isAutoCommit = false
         hikariConfig.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         hikariConfig.validate()

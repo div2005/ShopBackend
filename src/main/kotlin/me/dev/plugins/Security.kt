@@ -5,24 +5,24 @@ import io.ktor.server.response.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
-import me.dev.common.seed.SeedService
+import kotlinx.serialization.Serializable
 import me.dev.feature.user.data.UserTokens
 import me.dev.feature.user.data.UserTokensTable
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.koin.ktor.ext.inject
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import java.time.LocalDateTime
 
 fun Application.configureSecurity() {
-    data class AppPrincipal(val key: String) : Principal
+    data class AppPrincipal(val key: String)
 
     authentication {
         bearer("token") {
             authenticate{tokenCredential ->
-                val validTime = newSuspendedTransaction {
-                    return@newSuspendedTransaction UserTokens.find { UserTokensTable.token eq tokenCredential.token }.firstOrNull()?.validTime
+                val validTime = suspendTransaction {
+                    return@suspendTransaction UserTokens.find { UserTokensTable.token eq tokenCredential.token }.firstOrNull()?.validTime
                 }
 
-                if(validTime != null && validTime < LocalDateTime.now().plusDays(90)){
+                if(validTime != null && (validTime < LocalDateTime.now().plusDays(90))){
                     AppPrincipal(tokenCredential.token)
                 } else{
                     null
@@ -31,6 +31,7 @@ fun Application.configureSecurity() {
         }
     }
 
+    @Serializable
     data class MySession(val count: Int = 0)
     install(Sessions) {
         cookie<MySession>("MY_SESSION") {

@@ -10,57 +10,59 @@ import me.dev.feature.user.data.UserTokens
 import me.dev.feature.user.data.UserTokensTable
 import me.dev.feature.user.domain.mapper.toDTO
 import me.dev.feature.user.domain.model.*
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.time.LocalDateTime
 import java.util.*
 
-class UserRepositoryImpl: UserRepository, KoinComponent {
-    private val passwordService: PasswordService by inject()
-    private val userDataValidatorService: UserDataValidatorService by inject()
-    private val tokenService: TokenService by inject()
+class UserRepositoryImpl(
+    private val passwordService: PasswordService,
+    private val userDataValidatorService: UserDataValidatorService,
+    private val tokenService: TokenService
+): UserRepository, KoinComponent {
+
 
     override suspend fun getAllUsers(): List<UserDTO> {
-        val users = newSuspendedTransaction {
-            return@newSuspendedTransaction User.all().sortedBy { i -> i.firstName }.toList()
+        val users = suspendTransaction {
+            return@suspendTransaction User.all().sortedBy { i -> i.firstName }.toList()
         }
         return users.map { u -> u.toDTO() }
     }
 
     override suspend fun getUser(uuid: String): UserDTO? {
-        return newSuspendedTransaction {
-            return@newSuspendedTransaction User.findById(UUID.fromString(uuid))?.toDTO()
+        return suspendTransaction {
+            return@suspendTransaction User.findById(UUID.fromString(uuid))?.toDTO()
         }
     }
 
     override suspend fun createUser(request: UserCreateRequest): UserCreateResponse {
-        return newSuspendedTransaction {
+        return suspendTransaction {
 
             if (!User.find { UserTable.username.lowerCase() eq request.username.lowercase() }.empty())
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.USERNAME_ALREADY_IN_USE)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.USERNAME_ALREADY_IN_USE)
 
             if (!User.find { UserTable.email.lowerCase() eq request.email.lowercase() }.empty())
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.EMAIL_ALREADY_IN_USE)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.EMAIL_ALREADY_IN_USE)
 
             if (!passwordService.validatePassword(request.password))
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_PASSWORD)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_PASSWORD)
 
             if (!userDataValidatorService.validateUsername(request.username))
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_USERNAME)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_USERNAME)
 
             if (!userDataValidatorService.validateFirstOrSecondName(request.firstName))
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_NAME)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_NAME)
 
             if (!userDataValidatorService.validateFirstOrSecondName(request.secondName))
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_NAME)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_NAME)
 
             if (!userDataValidatorService.validateEmail(request.email))
-                return@newSuspendedTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_MAIL)
+                return@suspendTransaction UserCreateResponse(status = UserCreateResponse.StatusType.BAD_MAIL)
 
-            return@newSuspendedTransaction UserCreateResponse(userDTO =
+            return@suspendTransaction UserCreateResponse(userDTO =
             User.new {
                 firstName = request.firstName
                 secondName = request.secondName
@@ -73,38 +75,38 @@ class UserRepositoryImpl: UserRepository, KoinComponent {
     }
 
     override suspend fun updateUser(uuid: String, request: UserUpdateRequest): UserUpdateResponse {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             val user = User.findById(UUID.fromString(uuid))
-                ?: return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.NOT_FOUND)
+                ?: return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.NOT_FOUND)
 
             if (
                 request.username != null &&
                 request.username != user.username &&
                 !User.find { UserTable.username.lowerCase() eq request.username.lowercase() }.empty()
                 )
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.USERNAME_ALREADY_IN_USE)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.USERNAME_ALREADY_IN_USE)
 
             if (
                 request.email != null &&
                 request.email != user.email &&
                 !User.find { UserTable.email.lowerCase() eq request.email.lowercase() }.empty()
                 )
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.EMAIL_ALREADY_IN_USE)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.EMAIL_ALREADY_IN_USE)
 
             if (!request.password.isNullOrEmpty() && !passwordService.validatePassword(request.password))
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_PASSWORD)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_PASSWORD)
 
             if (!request.username.isNullOrEmpty() && !userDataValidatorService.validateUsername(request.username))
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_USERNAME)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_USERNAME)
 
             if (!request.firstName.isNullOrEmpty() && !userDataValidatorService.validateFirstOrSecondName(request.firstName))
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_NAME)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_NAME)
 
             if (!request.secondName.isNullOrEmpty() && !userDataValidatorService.validateFirstOrSecondName(request.secondName))
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_NAME)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_NAME)
 
             if (!request.email.isNullOrEmpty() && !userDataValidatorService.validateEmail(request.email))
-                return@newSuspendedTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_MAIL)
+                return@suspendTransaction UserUpdateResponse(status = UserUpdateResponse.StatusType.BAD_MAIL)
 
             user.apply {
                 if (!request.username.isNullOrEmpty()) username = request.username
@@ -117,32 +119,32 @@ class UserRepositoryImpl: UserRepository, KoinComponent {
             if (!request.password.isNullOrEmpty())
                 UserTokens.find { UserTokensTable.user eq user.id }.forEach { token -> token.delete() }
 
-            return@newSuspendedTransaction UserUpdateResponse(
+            return@suspendTransaction UserUpdateResponse(
                 userDTO = user.toDTO()
             )
         }
     }
 
     override suspend fun removeUser(uuid: String): UserDTO? {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             val _uuid = UUID.fromString(uuid)
-            val dto = User.findById(_uuid)?.toDTO() ?: return@newSuspendedTransaction null
+            val dto = User.findById(_uuid)?.toDTO() ?: return@suspendTransaction null
 
             User.findById(_uuid)?.delete()
 
-            return@newSuspendedTransaction dto
+            return@suspendTransaction dto
         }
     }
 
     override suspend fun loginUser(request: UserLoginRequest): UserLoginResponse? {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             val user = User.find {
                     (UserTable.username.lowerCase() eq request.login.lowercase())
                         .or(UserTable.email.lowerCase() eq request.login.lowercase())
             }.firstOrNull()
 
             if (user == null || !passwordService.verifyPassword(request.password, user.password))
-                return@newSuspendedTransaction null
+                return@suspendTransaction null
 
             val token = tokenService.generateToken()
 
@@ -152,21 +154,21 @@ class UserRepositoryImpl: UserRepository, KoinComponent {
                 this.validTime = LocalDateTime.now().plusDays(90)
             }
 
-            return@newSuspendedTransaction UserLoginResponse(token, user.toDTO())
+            return@suspendTransaction UserLoginResponse(token, user.toDTO())
         }
     }
 
     override suspend fun logoutUser(token: String) {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             UserTokens.find { UserTokensTable.token eq token }.firstOrNull()?.delete()
         }
     }
 
     override suspend fun getTokenValidity(token: String): GetTokenValidityResponse {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             val userToken = UserTokens.find { UserTokensTable.token eq token }.firstOrNull()
 
-            return@newSuspendedTransaction GetTokenValidityResponse(
+            return@suspendTransaction GetTokenValidityResponse(
                     userToken?.validTime?.toKotlinLocalDateTime() ?: LocalDateTime.MIN.toKotlinLocalDateTime(),
                     userToken?.user?.id?.toString()
             )

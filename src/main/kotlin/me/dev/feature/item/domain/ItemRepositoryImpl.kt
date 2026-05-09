@@ -1,29 +1,29 @@
 package me.dev.feature.item.domain
 
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import me.dev.feature.item.data.Item
 import me.dev.feature.item.domain.mapper.toDTO
 import me.dev.feature.item.domain.model.ItemCreateRequest
 import me.dev.feature.item.domain.model.ItemDTO
 import me.dev.feature.item.domain.model.ItemUpdateRequest
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 class ItemRepositoryImpl : ItemRepository {
     override suspend fun getAllItems(): List<ItemDTO> {
-        val items = newSuspendedTransaction {
-            return@newSuspendedTransaction Item.all().sortedBy { i -> i.id }.toList()
+        val items = suspendTransaction {
+            return@suspendTransaction Item.all().sortedBy { it.id.value }.toList()
         }
         return items.map { i -> i.toDTO() }
     }
 
     override suspend fun getItem(id: Int): ItemDTO? {
-         return newSuspendedTransaction {
-            return@newSuspendedTransaction Item.findById(id)?.toDTO()
+         return suspendTransaction {
+            return@suspendTransaction Item.findById(id)?.toDTO()
         }
     }
 
     override suspend fun createItem(itemCreateRequest: ItemCreateRequest): ItemDTO {
-        return newSuspendedTransaction {
-            return@newSuspendedTransaction Item.new {
+        return suspendTransaction {
+            return@suspendTransaction Item.new {
                 name = itemCreateRequest.name
                 description = itemCreateRequest.description
                 stock = itemCreateRequest.stock
@@ -35,8 +35,8 @@ class ItemRepositoryImpl : ItemRepository {
     }
 
     override suspend fun updateItem(id: Int, request: ItemUpdateRequest): ItemDTO? {
-        return newSuspendedTransaction {
-            return@newSuspendedTransaction Item.findById(id)?.apply {
+        return suspendTransaction {
+            return@suspendTransaction Item.findById(id)?.apply {
                 name = request.name
                 description = request.description
                 stock = request.stock
@@ -48,10 +48,10 @@ class ItemRepositoryImpl : ItemRepository {
     }
 
     override suspend fun removeItem(id: Int): ItemDTO? {
-        return newSuspendedTransaction {
+        return suspendTransaction {
             val dto = Item.findById(id)?.toDTO()
             Item.findById(id)?.delete()
-            return@newSuspendedTransaction dto
+            return@suspendTransaction dto
         }
     }
 }

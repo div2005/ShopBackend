@@ -8,10 +8,8 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.patch
-import io.ktor.server.resources.put
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import me.dev.feature.user.data.User
 import me.dev.feature.user.domain.UserRepository
 import me.dev.feature.user.domain.model.*
 import org.koin.ktor.ext.inject
@@ -117,7 +115,8 @@ fun Route.userEndpoint() {
 
         post<Session.Logout> {
             try {
-                val token = this.context.request.authorization()!!
+                val token = call.request.authorization()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
 
                 val result = userRepository.logoutUser(token)
 
@@ -129,8 +128,9 @@ fun Route.userEndpoint() {
 
         get<Session.Token> {
             try {
-                val token = this.context.request.authorization()!!
-                val result = userRepository.getTokenValidity(token.substring(7, token.length))
+                val token = call.request.authorization() ?: return@get call.respond(HttpStatusCode.Unauthorized)
+                val rawToken = if (token.startsWith("Bearer ")) token.substring(7) else token
+                val result = userRepository.getTokenValidity(rawToken)
 
                 call.respond(HttpStatusCode.OK, result)
             } catch (e: Exception) {

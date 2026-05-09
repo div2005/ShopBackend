@@ -2,15 +2,15 @@ package me.dev.common.seed
 
 import me.dev.common.password.PasswordService
 import me.dev.feature.user.data.User
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class SeedServiceImpl : SeedService, KoinComponent {
-    private val passwordService: PasswordService by inject()
+class SeedServiceImpl(
+    private val passwordService: PasswordService
+) : SeedService, KoinComponent {
     override suspend fun seed() {
-        newSuspendedTransaction {
-            if (!User.all().empty()) return@newSuspendedTransaction
+        suspendTransaction {
+            if (!User.all().empty()) return@suspendTransaction
 
             User.new {
                 firstName = "Admin"

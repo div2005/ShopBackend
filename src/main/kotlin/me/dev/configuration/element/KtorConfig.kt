@@ -1,7 +1,6 @@
 package me.dev.configuration.element
 
 data class DeploymentConfig(val port: Int)
-data class ServerConfig(val isDevelopment: Boolean)
 
 data class DatabaseConfig (
     val driverClass: String,
@@ -13,7 +12,6 @@ data class DatabaseConfig (
 
 class KtorConfig {
     var development: Boolean = true
-    lateinit var serverConfig: ServerConfig
     lateinit var deploymentConfig: DeploymentConfig
     lateinit var databaseConfig: DatabaseConfig
 }
